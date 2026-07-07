@@ -126,18 +126,6 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 
 app = FastAPI()
 
-@app.get("/")
-def health_check():
-    return {"status": "ok"}
-
-@app.get("/about-me")
-def about_me():
-    return {"name": "<your-name>"}
-
-@app.get("/ping")
-def return_pong():
-    return {"message":"pong"}
-
 @app.get("/users")
 def get_users(db:Session=Depends(get_db),current_user: User = Depends(get_current_user)):
     users=db.query(User).all()
