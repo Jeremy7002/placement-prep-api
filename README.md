@@ -11,7 +11,66 @@ Connections to TiDB are secured over TLS using a CA certificate, since the datab
 **Note:** the app is hosted on Render's free tier, which spins down after 15 minutes of inactivity. The first request after a period of idle time may take 30-60 seconds to respond while the instance restarts — this is expected behavior, not an error.
 
 ## Setup Instructions
-*(coming soon)*
+
+**Prerequisites**
+- Python 3.12
+- A MySQL-compatible database (this project uses [TiDB Cloud](https://tidbcloud.com)'s free tier)
+
+**1. Clone the repository**
+
+```
+git clone https://github.com/Jeremy7002/placement-prep-api.git
+cd placement-prep-api
+```
+
+**2. Create and activate a virtual environment**
+
+```
+python -m venv venv
+```
+
+On Windows:
+
+```
+venv\Scripts\activate
+```
+
+On macOS/Linux:
+
+```
+source venv/bin/activate
+```
+
+**3. Install dependencies**
+
+```
+pip install -r requirements.txt
+```
+
+**4. Set up environment variables**
+
+Create a `.env` file in the project root with the following variables:
+
+```
+SECRET_KEY=your_jwt_secret_key_here
+DATABASE_URL=mysql+pymysql://<username>:<password>@<host>:<port>/<database>?ssl_ca=./certs/ca.pem
+```
+
+If using TiDB Cloud, download your CA certificate from your cluster's "Connect" page and place it at `certs/ca.pem` in the project root.
+
+**5. Run the application**
+
+```
+uvicorn main:app --reload
+```
+
+**Note (Windows):** if the above command isn't recognized after activating the virtual environment, run it explicitly instead:
+
+```
+venv\Scripts\python.exe -m uvicorn main:app --reload
+```
+
+The API will be available at `http://localhost:8000`, with interactive documentation at `http://localhost:8000/docs`. Database tables are created automatically on first run.
 
 ## API Documentation
 *(coming soon)*
