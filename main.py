@@ -15,15 +15,19 @@ from database import SessionLocal
 
 from pwdlib import PasswordHash
 import jwt
-from datetime import datetime, timedelta, timezone,date
+from datetime import datetime, timedelta, timezone, date
 
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
-security=HTTPBearer()
+security = HTTPBearer()
 password_hash = PasswordHash.recommended()
 SECRET_KEY = os.environ.get("SECRET_KEY")
+
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY environment variable is not set. Check your .env file or Render environment variables.")
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 200
 
@@ -119,24 +123,25 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
     
-    user = db.query(User).filter(User.id == int(user_id)).first()
+    try:
+        user_id = int(user_id)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=401, detail="Invalid token: malformed subject")
+    
+    user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise HTTPException(status_code=401, detail="User not found")
     return user
 
 app = FastAPI()
 
-@app.get("/users")
-def get_users(db:Session=Depends(get_db),current_user: User = Depends(get_current_user)):
-    users=db.query(User).all()
-    res=[]
-    for i in range(len(users)):
-        dic={}
-        dic["id"]=users[i].id
-        dic["email"]=users[i].email
-        dic["created_at"]=users[i].created_at
-        res.append(dic)
-    return res
+@app.get("/users/me")
+def get_users(current_user: User = Depends(get_current_user)):
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "created_at": current_user.created_at
+    }
         
 def hash_password(password: str) -> str:
     return password_hash.hash(password)
@@ -149,7 +154,7 @@ def create_access_token(data:dict):
     encoded_jwt=jwt.encode(to_encode,SECRET_KEY,algorithm=ALGORITHM)
     return encoded_jwt
 
-@app.post("/auth/register")
+@app.post("/auth/register", status_code=201)
 def create_user(email: str, password: str, db: Session = Depends(get_db)):
     try:
         new_user = User(email=email, hashed_password=hash_password(password))
@@ -170,11 +175,12 @@ def login_check(email:str,password: str,db:Session=Depends(get_db)):
     check_for_pass=verify_password(password,hashed)
     if check_for_pass:
         payload=str(check_for_email.id)
-        return create_access_token({"sub":payload})        
+        token = create_access_token({"sub":payload})
+        return {"access_token": token, "token_type": "bearer"}        
     else:
         raise HTTPException(status_code=401, detail="Invalid Credentials")
     
-@app.post("/problems")
+@app.post("/problems", status_code=201)
 def create_problems(topic : str,title : str,difficulty : str = Query(..., description="Valid choices: Easy, Medium, Hard"),status : str = Query(..., description="Valid choices: Completed, Not Completed, Pending"),date_solved : date=Query(...,description="Format: YYYY-MM-DD"), current_user: User = Depends(get_current_user),db:Session=Depends(get_db)):
     VALID_STATUSES=["Completed","Not Completed","Pending"]
     VALID_DIFFICULTIES=["Easy","Medium","Hard"]
@@ -268,7 +274,7 @@ def delete_problem(id : int,current_user: User = Depends(get_current_user),db:Se
     else:
         raise HTTPException(status_code=404, detail="Problem Not Found")
 
-@app.post("/resources")
+@app.post("/resources", status_code=201)
 def create_resources(topic : str,title : str,url : str,notes : str, current_user: User = Depends(get_current_user),db:Session=Depends(get_db)):
     if not topic:
         raise HTTPException(status_code=400, detail="Topic cannot be empty")
@@ -299,7 +305,7 @@ def delete_resource(id : int,current_user: User = Depends(get_current_user),db:S
     else:
         raise HTTPException(status_code=404, detail="Resource Not Found")
 
-@app.post("/companies")
+@app.post("/companies", status_code=201)
 def create_companies(name : str,role : str,interview_format : str,application_status : str = Query(..., description="Valid choices: Applied, Interviewing, Offer Received, Accepted, Rejected"), current_user: User = Depends(get_current_user),db:Session=Depends(get_db)):
     VALID_APPLICATION_STATUSES = ["Applied", "Interviewing", "Offer Received", "Accepted", "Rejected"]
     if application_status not in VALID_APPLICATION_STATUSES:
