@@ -73,4 +73,90 @@ venv\Scripts\python.exe -m uvicorn main:app --reload
 The API will be available at `http://localhost:8000`, with interactive documentation at `http://localhost:8000/docs`. Database tables are created automatically on first run.
 
 ## API Documentation
-*(coming soon)*
+
+Full interactive documentation is available at [`/docs`](https://placement-prep-api.onrender.com/docs) via Swagger UI. Below are examples of core endpoints.
+
+### Register a new user
+
+`POST /auth/register`
+
+**Request body:**
+
+```json
+{
+  "email": "user@example.com",
+  "password": "yourpassword"
+}
+```
+
+**Response** (`201 Created`):
+
+```json
+{
+  "id": 1,
+  "email": "user@example.com"
+}
+```
+
+### Login
+
+`POST /auth/login`
+
+**Request body:**
+
+```json
+{
+  "email": "user@example.com",
+  "password": "yourpassword"
+}
+```
+
+**Response** (`200 OK`):
+
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIs...",
+  "token_type": "bearer"
+}
+```
+
+Use the returned `access_token` as a Bearer token in the `Authorization` header for all protected routes below.
+
+### Create a problem (protected)
+
+`POST /problems?topic={topic}&title={title}&difficulty={difficulty}&status={status}&date_solved={date_solved}`
+
+**Requires:** `Authorization: Bearer <access_token>`
+
+**Query parameters:**
+- `topic` (string)
+- `title` (string)
+- `difficulty` (string) — valid choices: `Easy`, `Medium`, `Hard`
+- `status` (string) — valid choices: `Completed`, `Not Completed`, `Pending`
+- `date_solved` (date) — format: `YYYY-MM-DD`
+
+**Response** (`201 Created`):
+
+```json
+{
+  "id": 1,
+  "title": "Two Sum"
+}
+```
+
+### Weekly progress analytics (protected)
+
+`GET /analytics/progress`
+
+**Requires:** `Authorization: Bearer <access_token>`
+
+**Response** (`200 OK`):
+
+```json
+[
+  {
+    "week_start": "2026-06-30",
+    "problems_solved": 4
+  }
+]
+```

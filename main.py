@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from database import SessionLocal
 
+from pydantic import BaseModel
 from pwdlib import PasswordHash
 import jwt
 from datetime import datetime, timedelta, timezone, date
@@ -30,6 +31,10 @@ if not SECRET_KEY:
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 200
+
+class UserCredentials(BaseModel):
+    email: str
+    password: str
 
 class User(Base):
     __tablename__ = "users"
@@ -155,9 +160,9 @@ def create_access_token(data:dict):
     return encoded_jwt
 
 @app.post("/auth/register", status_code=201)
-def create_user(email: str, password: str, db: Session = Depends(get_db)):
+def create_user(credentials: UserCredentials, db: Session = Depends(get_db)):
     try:
-        new_user = User(email=email, hashed_password=hash_password(password))
+        new_user = User(email=credentials.email, hashed_password=hash_password(credentials.password))
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
@@ -167,12 +172,12 @@ def create_user(email: str, password: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="This Email is already registered")
 
 @app.post("/auth/login")
-def login_check(email:str,password: str,db:Session=Depends(get_db)):
-    check_for_email=db.query(User).filter(User.email == email).first()
+def login_check(credentials: UserCredentials, db: Session = Depends(get_db)):
+    check_for_email=db.query(User).filter(User.email == credentials.email).first()
     if check_for_email is None:
         raise HTTPException(status_code=401, detail="Invalid Credentials")
     hashed=check_for_email.hashed_password
-    check_for_pass=verify_password(password,hashed)
+    check_for_pass=verify_password(credentials.password,hashed)
     if check_for_pass:
         payload=str(check_for_email.id)
         token = create_access_token({"sub":payload})
@@ -219,7 +224,7 @@ def get_progress(current_user: User = Depends(get_current_user),db:Session=Depen
     for rec in records:
         ans={}
         ans["week_start"]=rec[0]
-        ans["Problems_solved"]=rec[1]
+        ans["problems_solved"]=rec[1]
         res.append(ans)
     return res
 
