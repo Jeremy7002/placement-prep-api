@@ -181,4 +181,3 @@ This project was built and deployed under a defined timeline, with priority give
 - **Login response timing.** Password verification currently only runs when the submitted email exists in the database, meaning response times could theoretically reveal which emails are registered. Verifying against a dummy hash on a non-existent email is a planned fix.
 
 - **Free-tier hosting trade-offs.** The API is hosted on Render's free tier, which spins down after 15 minutes of inactivity — the first request afterward may take 30–60 seconds. TiDB Cloud's free tier also uses distributed ID allocation, so auto-incrementing IDs are unique but not strictly sequential.
-```
