@@ -166,3 +166,19 @@ Use the returned `access_token` as a Bearer token in the `Authorization` header 
   }
 ]
 ```
+## Known Limitations & Future Improvements
+
+This project was built and deployed under a defined timeline, with priority given to core functionality, security-critical fixes, and a working production deployment. The following items were identified during a code review and intentionally deferred, along with the reasoning for deferring them:
+
+- **Inconsistent request format across endpoints.** `POST /auth/login` and `POST /auth/register` accept a JSON request body (fixed, since these carry credentials). Other create/update endpoints (`/problems`, `/resources`, `/companies`) currently accept query parameters instead of a JSON body. Migrating all endpoints to JSON bodies is a planned improvement, deferred to avoid retesting the entire API surface this close to deployment.
+
+- **No database migration tooling.** Schema is currently created via SQLAlchemy's `Base.metadata.create_all()` at startup. Adopting Alembic for versioned migrations is planned for any future schema changes.
+
+- **Single-file application structure.** Models, authentication logic, and route handlers currently live in `main.py`. Splitting into separate modules (`models.py`, `auth.py`, route-specific files) is a planned refactor for maintainability.
+
+- **No rate limiting.** `/auth/login` currently has no protection against repeated brute-force attempts. Adding a library such as `slowapi` is a planned improvement.
+
+- **Login response timing.** Password verification currently only runs when the submitted email exists in the database, meaning response times could theoretically reveal which emails are registered. Verifying against a dummy hash on a non-existent email is a planned fix.
+
+- **Free-tier hosting trade-offs.** The API is hosted on Render's free tier, which spins down after 15 minutes of inactivity — the first request afterward may take 30–60 seconds. TiDB Cloud's free tier also uses distributed ID allocation, so auto-incrementing IDs are unique but not strictly sequential.
+```
