@@ -70,6 +70,12 @@ uvicorn main:app --reload
 venv\Scripts\python.exe -m uvicorn main:app --reload
 ```
 
+**Note:** if running inside a cloud-sync folder (OneDrive, Dropbox, Google Drive, iCloud Drive, etc.), `--reload` may cause a continuous reload loop, since these services' background syncing can trigger uvicorn's file watcher repeatedly. Either move the project outside any cloud-sync folder, or run without `--reload` for a single-session run:
+
+```
+uvicorn main:app
+```
+
 The API will be available at `http://localhost:8000`, with interactive documentation at `http://localhost:8000/docs`. Database tables are created automatically on first run.
 
 ## API Documentation
