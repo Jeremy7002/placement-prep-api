@@ -1,59 +1,28 @@
 from fastapi import FastAPI
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func,case
 from database import Base, engine
 
-from fastapi import HTTPException
-
 from fastapi import Depends
-from fastapi import Query
 from sqlalchemy.orm import Session
 
 from database import get_db
-from security import get_current_user, UserCredentials
-from security import hash_password, verify_password
-from security import create_access_token
+from security import get_current_user
 
-from datetime import datetime, date
-
-from models import User, Problem, Resource, Company
+from models import User, Problem
 from routers.auth import router as auth_router
 from routers.users import router as users_router
 from routers.problems import router as problems_router
 from routers.resources import router as resources_router
+from routers.companies import router as companies_router
 
 Base.metadata.create_all(bind=engine)
-    
-
-def company_to_dic(company):
-    return {
-        "id": company.id,
-        "name": company.name,
-        "role": company.role,
-        "interview format": company.interview_format,
-        "application_status": company.application_status,
-        "applied on":company.applied_on,
-        "status changed on":company.status_updated_at
-    }
 
 app = FastAPI()
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(problems_router)
 app.include_router(resources_router)
-
-@app.post("/auth/register", status_code=201)
-def create_user(credentials: UserCredentials, db: Session = Depends(get_db)):
-    try:
-        new_user = User(email=credentials.email, hashed_password=hash_password(credentials.password))
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-        return {"id": new_user.id, "email": new_user.email}
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(status_code=400, detail="This Email is already registered")
-    
+app.include_router(companies_router)
 
 @app.get("/analytics/progress")
 def get_progress(current_user: User = Depends(get_current_user),db:Session=Depends(get_db)):
@@ -92,48 +61,3 @@ def get_weak_topics(current_user: User = Depends(get_current_user),db:Session=De
     for ans in res:
         del ans["Rate"]
     return res
-
-
-@app.post("/companies", status_code=201)
-def create_companies(name : str,role : str,interview_format : str,application_status : str = Query(..., description="Valid choices: Applied, Interviewing, Offer Received, Accepted, Rejected"), current_user: User = Depends(get_current_user),db:Session=Depends(get_db)):
-    VALID_APPLICATION_STATUSES = ["Applied", "Interviewing", "Offer Received", "Accepted", "Rejected"]
-    if application_status not in VALID_APPLICATION_STATUSES:
-        raise HTTPException(status_code=400, detail=f"Invalid application_status. Valid choices are: {VALID_APPLICATION_STATUSES}")
-    if not name:
-        raise HTTPException(status_code=400, detail="Company name cannot be empty")
-    if not role:
-        raise HTTPException(status_code=400, detail="Role cannot be empty")
-    if not interview_format:
-        raise HTTPException(status_code=400, detail="Interviewing Format should not be empty")
-    new_company=Company(user_id=current_user.id, name=name, role=role, interview_format=interview_format, application_status=application_status)
-    db.add(new_company)
-    db.commit()
-    db.refresh(new_company)
-    return {"id":new_company.id,"Company name":new_company.name}
-
-@app.get("/companies")
-def get_company(current_user: User = Depends(get_current_user),db:Session=Depends(get_db)):
-    query=db.query(Company).filter(Company.user_id==current_user.id)
-    records=query.all()
-    return [company_to_dic(p) for p in records]
-
-@app.put("/companies/{id}")
-def update_company(id : int,role:str=None,interview_format:str=None,application_status : str = Query(None, description="Valid choices: Applied, Interviewing, Offer Received, Accepted, Rejected"),current_user: User = Depends(get_current_user),db:Session=Depends(get_db)):
-    VALID_APPLICATION_STATUSES = ["Applied", "Interviewing", "Offer Received", "Accepted", "Rejected"]
-    if application_status and (application_status not in VALID_APPLICATION_STATUSES):
-        raise HTTPException(status_code=400, detail=f"Invalid application_status. Valid choices are: {VALID_APPLICATION_STATUSES}")
-
-    company=db.query(Company).filter(Company.id==id,Company.user_id==current_user.id).first()
-    if company:
-        if role:
-            company.role=role
-        if interview_format:
-            company.interview_format=interview_format
-        if application_status:
-            company.application_status=application_status
-            company.status_updated_at = datetime.now()
-        db.commit()
-        return company_to_dic(company)
-    else:
-        raise HTTPException(status_code=404, detail="Company Not Found")
-
