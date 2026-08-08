@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 
-from sqlalchemy import Column, Integer, String, DateTime,ForeignKey,Enum,Date,Text
 from sqlalchemy.sql import func,case
 from sqlalchemy.exc import IntegrityError
 from database import Base, engine
@@ -20,6 +19,8 @@ from datetime import datetime, timedelta, timezone, date
 
 import os
 from dotenv import load_dotenv
+from models import User, Problem, Resource, Company
+from routers.auth import router as auth_router
 
 load_dotenv()
 security = HTTPBearer()
@@ -36,47 +37,6 @@ class UserCredentials(BaseModel):
     email: str
     password: str
 
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String(255), unique=True, index=True)
-    hashed_password = Column(String(255))
-    created_at = Column(DateTime, server_default=func.now())
-
-class Problem(Base):
-    __tablename__ = "problems"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    topic=Column(String(255))
-    title=Column(String(255))
-    status = Column(Enum("Not Completed", "Pending", "Completed", name="status_enum"))
-    difficulty=Column(Enum("Hard", "Medium", "Easy", name="difficulty_enum"))
-    date_solved=Column(Date)
-
-class Resource(Base):
-    __tablename__="resources"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    title=Column(String(255))
-    url=Column(String(500))
-    topic=Column(String(255))
-    notes=Column(Text)
-    created_at = Column(DateTime, server_default=func.now())
-
-class Company(Base):
-    __tablename__="companies"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    name=Column(String(255))
-    role=Column(String(255))
-    interview_format=Column(String(255))
-    application_status = Column(Enum("Applied", "Interviewing", "Offer Received", "Accepted", "Rejected", name="application_status_enum"))
-    applied_on = Column(DateTime, server_default=func.now())
-    status_updated_at = Column(DateTime)
 
 Base.metadata.create_all(bind=engine)
     
@@ -111,12 +71,6 @@ def company_to_dic(company):
         "status changed on":company.status_updated_at
     }
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
     token = credentials.credentials
@@ -139,6 +93,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     return user
 
 app = FastAPI()
+app.include_router(auth_router)
 
 @app.get("/users/me")
 def get_users(current_user: User = Depends(get_current_user)):
@@ -170,20 +125,6 @@ def create_user(credentials: UserCredentials, db: Session = Depends(get_db)):
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=400, detail="This Email is already registered")
-
-@app.post("/auth/login")
-def login_check(credentials: UserCredentials, db: Session = Depends(get_db)):
-    check_for_email=db.query(User).filter(User.email == credentials.email).first()
-    if check_for_email is None:
-        raise HTTPException(status_code=401, detail="Invalid Credentials")
-    hashed=check_for_email.hashed_password
-    check_for_pass=verify_password(credentials.password,hashed)
-    if check_for_pass:
-        payload=str(check_for_email.id)
-        token = create_access_token({"sub":payload})
-        return {"access_token": token, "token_type": "bearer"}        
-    else:
-        raise HTTPException(status_code=401, detail="Invalid Credentials")
     
 @app.post("/problems", status_code=201)
 def create_problems(topic : str,title : str,difficulty : str = Query(..., description="Valid choices: Easy, Medium, Hard"),status : str = Query(..., description="Valid choices: Completed, Not Completed, Pending"),date_solved : date=Query(...,description="Format: YYYY-MM-DD"), current_user: User = Depends(get_current_user),db:Session=Depends(get_db)):
