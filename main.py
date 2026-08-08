@@ -20,17 +20,10 @@ from models import User, Problem, Resource, Company
 from routers.auth import router as auth_router
 from routers.users import router as users_router
 from routers.problems import router as problems_router
+from routers.resources import router as resources_router
+
 Base.metadata.create_all(bind=engine)
     
-def resource_to_dic(resource):
-    return {
-        "id": resource.id,
-        "title": resource.title,
-        "url": resource.url,
-        "topic": resource.topic,
-        "notes": resource.notes,
-        "created_at": resource.created_at
-    }
 
 def company_to_dic(company):
     return {
@@ -47,6 +40,7 @@ app = FastAPI()
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(problems_router)
+app.include_router(resources_router)
 
 @app.post("/auth/register", status_code=201)
 def create_user(credentials: UserCredentials, db: Session = Depends(get_db)):
@@ -99,37 +93,6 @@ def get_weak_topics(current_user: User = Depends(get_current_user),db:Session=De
         del ans["Rate"]
     return res
 
-
-@app.post("/resources", status_code=201)
-def create_resources(topic : str,title : str,url : str,notes : str, current_user: User = Depends(get_current_user),db:Session=Depends(get_db)):
-    if not topic:
-        raise HTTPException(status_code=400, detail="Topic cannot be empty")
-    if not title:
-        raise HTTPException(status_code=400, detail="Title cannot be empty")
-    if not url:
-        raise HTTPException(status_code=400, detail="URL cannot be empty")
-    new_resource=Resource(user_id=current_user.id, topic=topic, title=title, url=url, notes=notes)
-    db.add(new_resource)
-    db.commit()
-    db.refresh(new_resource)
-    return {"id":new_resource.id,"title":new_resource.title}
-
-@app.get("/resources")
-def get_resource(current_user: User = Depends(get_current_user),db:Session=Depends(get_db)):
-    query=db.query(Resource).filter(Resource.user_id==current_user.id)
-    records=query.all()
-    return [resource_to_dic(p) for p in records]
-
-@app.delete("/resources/{id}")
-def delete_resource(id : int,current_user: User = Depends(get_current_user),db:Session=Depends(get_db)):
-    resource=db.query(Resource).filter(Resource.id==id,Resource.user_id==current_user.id).first()
-    if resource:
-        title_val=resource.title
-        db.delete(resource)
-        db.commit()
-        return f"The Resource {title_val} has been deleted"
-    else:
-        raise HTTPException(status_code=404, detail="Resource Not Found")
 
 @app.post("/companies", status_code=201)
 def create_companies(name : str,role : str,interview_format : str,application_status : str = Query(..., description="Valid choices: Applied, Interviewing, Offer Received, Accepted, Rejected"), current_user: User = Depends(get_current_user),db:Session=Depends(get_db)):
