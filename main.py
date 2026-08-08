@@ -18,6 +18,7 @@ from datetime import datetime, date
 
 from models import User, Problem, Resource, Company
 from routers.auth import router as auth_router
+from routers.users import router as users_router
 
 Base.metadata.create_all(bind=engine)
     
@@ -54,14 +55,8 @@ def company_to_dic(company):
 
 app = FastAPI()
 app.include_router(auth_router)
+app.include_router(users_router)
 
-@app.get("/users/me")
-def get_users(current_user: User = Depends(get_current_user)):
-    return {
-        "id": current_user.id,
-        "email": current_user.email,
-        "created_at": current_user.created_at
-    }
 @app.post("/auth/register", status_code=201)
 def create_user(credentials: UserCredentials, db: Session = Depends(get_db)):
     try:
