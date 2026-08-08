@@ -19,19 +19,9 @@ from datetime import datetime, date
 from models import User, Problem, Resource, Company
 from routers.auth import router as auth_router
 from routers.users import router as users_router
-
+from routers.problems import router as problems_router
 Base.metadata.create_all(bind=engine)
     
-def rec_to_dic(problem):
-    return {
-        "id": problem.id,
-        "topic": problem.topic,
-        "title": problem.title,
-        "status": problem.status,
-        "difficulty": problem.difficulty,
-        "date_solved": problem.date_solved
-    }
-
 def resource_to_dic(resource):
     return {
         "id": resource.id,
@@ -56,6 +46,7 @@ def company_to_dic(company):
 app = FastAPI()
 app.include_router(auth_router)
 app.include_router(users_router)
+app.include_router(problems_router)
 
 @app.post("/auth/register", status_code=201)
 def create_user(credentials: UserCredentials, db: Session = Depends(get_db)):
@@ -69,33 +60,6 @@ def create_user(credentials: UserCredentials, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=400, detail="This Email is already registered")
     
-@app.post("/problems", status_code=201)
-def create_problems(topic : str,title : str,difficulty : str = Query(..., description="Valid choices: Easy, Medium, Hard"),status : str = Query(..., description="Valid choices: Completed, Not Completed, Pending"),date_solved : date=Query(...,description="Format: YYYY-MM-DD"), current_user: User = Depends(get_current_user),db:Session=Depends(get_db)):
-    VALID_STATUSES=["Completed","Not Completed","Pending"]
-    VALID_DIFFICULTIES=["Easy","Medium","Hard"]
-    if not topic:
-        raise HTTPException(status_code=400, detail="Topic should not be empty")
-    if not title:
-        raise HTTPException(status_code=400, detail="Title cannot be empty")
-    if status not in VALID_STATUSES:
-        raise HTTPException(status_code=400, detail=f"Invalid status. Valid choices are: {VALID_STATUSES}")
-    if difficulty not in VALID_DIFFICULTIES:
-        raise HTTPException(status_code=400, detail=f"Invalid difficulty. Valid choices are: {VALID_DIFFICULTIES}")
-    new_problem=Problem(user_id=current_user.id, topic=topic, title=title, difficulty=difficulty, status=status, date_solved=date_solved)
-    db.add(new_problem)
-    db.commit()
-    db.refresh(new_problem)
-    return {"id":new_problem.id,"title":new_problem.title}
-
-@app.get("/problems")
-def get_problem(current_user: User = Depends(get_current_user),db:Session=Depends(get_db),topic: str = None,status : str = Query(None, description="Valid choices: Completed, Not Completed, Pending")):
-    query=db.query(Problem).filter(Problem.user_id==current_user.id)
-    if topic:
-        query=query.filter(Problem.topic==topic)
-    if status:
-        query=query.filter(Problem.status==status)
-    records=query.all()
-    return [rec_to_dic(p) for p in records]
 
 @app.get("/analytics/progress")
 def get_progress(current_user: User = Depends(get_current_user),db:Session=Depends(get_db)):
@@ -135,33 +99,6 @@ def get_weak_topics(current_user: User = Depends(get_current_user),db:Session=De
         del ans["Rate"]
     return res
 
-@app.put("/problems/{id}")
-def update_problem(id : int,status:str = Query(None, description="Valid choices: Completed, Not Completed, Pending"),date_solved:date=Query(None,description="Format: YYYY-MM-DD"),current_user: User = Depends(get_current_user),db:Session=Depends(get_db)):
-    VALID_STATUSES=["Completed","Not Completed","Pending"]
-    if status and (status not in VALID_STATUSES):
-        raise HTTPException(status_code=400, detail=f"Invalid status. Valid choices are: {VALID_STATUSES}")
-    
-    problem=db.query(Problem).filter(Problem.id==id,Problem.user_id==current_user.id).first()
-    if problem:
-        if status:
-            problem.status=status
-        if date_solved:
-            problem.date_solved=date_solved
-        db.commit()
-        return rec_to_dic(problem)
-    else:
-        raise HTTPException(status_code=404, detail="Problem Not Found")
-
-@app.delete("/problems/{id}")
-def delete_problem(id : int,current_user: User = Depends(get_current_user),db:Session=Depends(get_db)):
-    problem=db.query(Problem).filter(Problem.id==id,Problem.user_id==current_user.id).first()
-    if problem:
-        id_val=problem.id
-        db.delete(problem)
-        db.commit()
-        return f"The Record of id:{id_val} has been deleted"
-    else:
-        raise HTTPException(status_code=404, detail="Problem Not Found")
 
 @app.post("/resources", status_code=201)
 def create_resources(topic : str,title : str,url : str,notes : str, current_user: User = Depends(get_current_user),db:Session=Depends(get_db)):
