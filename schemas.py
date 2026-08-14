@@ -96,3 +96,29 @@ class ResourceResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# ===== Company Schemas =====
+class CreateCompanyRequest(BaseModel):
+    name: str = Field(..., min_length=2, description="Company name cannot be empty")
+    role: str = Field(..., min_length=2, description="Role cannot be empty")
+    interview_format: str = Field(..., min_length=2, description="Interview format cannot be empty")
+    application_status: ApplicationStatusEnum
+
+
+class UpdateCompanyRequest(BaseModel):
+    role: Optional[str] = None
+    interview_format: Optional[str] = None
+    application_status: Optional[ApplicationStatusEnum] = None
+
+
+class CompanyResponse(BaseModel):
+    id: int
+    name: str
+    role: str
+    interview_format: str
+    application_status: str
+    applied_on: datetime
+    status_updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
