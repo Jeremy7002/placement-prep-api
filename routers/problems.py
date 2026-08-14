@@ -5,7 +5,7 @@ from typing import Optional
 from database import get_db
 from models import User, Problem
 from security import get_current_user
-from schemas import CreateProblemRequest, UpdateProblemRequest, ProblemResponse, StatusEnum
+from schemas import CreateProblemRequest, UpdateProblemRequest, ProblemResponse, StatusEnum, DeleteResponse
 
 router = APIRouter()
 
@@ -54,7 +54,7 @@ def update_problem(id: int, data: UpdateProblemRequest, current_user: User = Dep
     db.refresh(problem)
     return problem
 
-@router.delete("/problems/{id}")
+@router.delete("/problems/{id}", response_model=DeleteResponse)
 def delete_problem(id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     problem = db.query(Problem).filter(Problem.id == id, Problem.user_id == current_user.id).first()
     if not problem:

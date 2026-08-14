@@ -25,6 +25,10 @@ class ApplicationStatusEnum(str, Enum):
     REJECTED = "Rejected"
 
 
+#======Delete Response Schema =====
+class DeleteResponse(BaseModel):
+    message: str
+
 # ===== Auth Schemas =====
 class UserRegisterRequest(BaseModel):
     email: EmailStr
@@ -70,6 +74,25 @@ class ProblemResponse(BaseModel):
     status: str
     difficulty: str
     date_solved: date
+
+    class Config:
+        from_attributes = True
+
+# ===== Resource Schemas =====
+class CreateResourceRequest(BaseModel):
+    topic: str = Field(..., min_length=1, description="Topic cannot be empty")
+    title: str = Field(..., min_length=1, description="Title cannot be empty")
+    url: str = Field(..., min_length=1, description="URL cannot be empty")
+    notes: Optional[str] = None
+
+
+class ResourceResponse(BaseModel):
+    id: int
+    topic: str
+    title: str
+    url: str
+    notes: Optional[str]
+    created_at: datetime
 
     class Config:
         from_attributes = True
