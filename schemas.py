@@ -48,3 +48,28 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# ===== Problem Schemas =====
+class CreateProblemRequest(BaseModel):
+    topic: str = Field(..., min_length=2, description="Topic cannot be empty")
+    title: str = Field(..., min_length=2, description="Title cannot be empty")
+    difficulty: DifficultyEnum
+    status: StatusEnum
+    date_solved: date
+
+
+class UpdateProblemRequest(BaseModel):
+    status: Optional[StatusEnum] = None
+    date_solved: Optional[date] = None
+
+
+class ProblemResponse(BaseModel):
+    id: int
+    topic: str
+    title: str
+    status: str
+    difficulty: str
+    date_solved: date
+
+    class Config:
+        from_attributes = True

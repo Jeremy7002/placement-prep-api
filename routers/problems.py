@@ -1,83 +1,66 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
-from datetime import date
 from sqlalchemy import func
-
+from typing import Optional
 from database import get_db
 from models import User, Problem
 from security import get_current_user
+from schemas import CreateProblemRequest, UpdateProblemRequest, ProblemResponse, StatusEnum
 
 router = APIRouter()
 
-VALID_STATUSES = ["Completed", "Not Completed", "Pending"]
-VALID_DIFFICULTIES = ["Easy", "Medium", "Hard"]
 
-
-def rec_to_dic(problem):
-    return {
-        "id": problem.id,
-        "topic": problem.topic,
-        "title": problem.title,
-        "status": problem.status,
-        "difficulty": problem.difficulty,
-        "date_solved": problem.date_solved
-    }
-
-
-@router.post("/problems", status_code=201)
-def create_problems(topic: str, title: str, difficulty: str = Query(..., description="Valid choices: Easy, Medium, Hard"), status: str = Query(..., description="Valid choices: Completed, Not Completed, Pending"), date_solved: date = Query(..., description="Format: YYYY-MM-DD"), current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    if not topic:
-        raise HTTPException(status_code=400, detail="Topic should not be empty")
-    if not title:
-        raise HTTPException(status_code=400, detail="Title cannot be empty")
-    if status not in VALID_STATUSES:
-        raise HTTPException(status_code=400, detail=f"Invalid status. Valid choices are: {VALID_STATUSES}")
-    if difficulty not in VALID_DIFFICULTIES:
-        raise HTTPException(status_code=400, detail=f"Invalid difficulty. Valid choices are: {VALID_DIFFICULTIES}")
-    new_problem = Problem(user_id=current_user.id, topic=topic.strip().title(), title=title, difficulty=difficulty, status=status, date_solved=date_solved)
+@router.post("/problems", status_code=201, response_model=ProblemResponse)
+def create_problems(data: CreateProblemRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    new_problem = Problem(
+        user_id=current_user.id,
+        topic=data.topic.strip().title(),
+        title=data.title,
+        difficulty=data.difficulty,
+        status=data.status,
+        date_solved=data.date_solved
+    )
     db.add(new_problem)
     db.commit()
     db.refresh(new_problem)
-    return {"id": new_problem.id, "title": new_problem.title}
+    return new_problem
 
-
-@router.get("/problems")
-def get_problem(current_user: User = Depends(get_current_user), db: Session = Depends(get_db), topic: str = None, status: str = Query(None, description="Valid choices: Completed, Not Completed, Pending")):
+@router.get("/problems", response_model=list[ProblemResponse])
+def get_problem(current_user: User = Depends(get_current_user), db: Session = Depends(get_db), topic: Optional[str] = None, status: Optional[str] = None):
     query = db.query(Problem).filter(Problem.user_id == current_user.id)
     if topic:
         query = query.filter(func.lower(Problem.topic) == topic.strip().lower())
     if status:
-        if status not in VALID_STATUSES:
-            raise HTTPException(status_code=400, detail=f"Invalid status. Valid choices are: {VALID_STATUSES}")
-        query = query.filter(Problem.status == status)
+        try:
+            status_enum = StatusEnum(status)
+            query = query.filter(Problem.status == status_enum.value)
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid status. Valid choices are: {[s.value for s in StatusEnum]}")
     records = query.all()
-    return [rec_to_dic(p) for p in records]
+    return records
 
 
-@router.put("/problems/{id}")
-def update_problem(id: int, status: str = Query(None, description="Valid choices: Completed, Not Completed, Pending"), date_solved: date = Query(None, description="Format: YYYY-MM-DD"), current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    if status and (status not in VALID_STATUSES):
-        raise HTTPException(status_code=400, detail=f"Invalid status. Valid choices are: {VALID_STATUSES}")
-
+@router.put("/problems/{id}", response_model=ProblemResponse)
+def update_problem(id: int, data: UpdateProblemRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     problem = db.query(Problem).filter(Problem.id == id, Problem.user_id == current_user.id).first()
-    if problem:
-        if status:
-            problem.status = status
-        if date_solved:
-            problem.date_solved = date_solved
-        db.commit()
-        return rec_to_dic(problem)
-    else:
+    if not problem:
         raise HTTPException(status_code=404, detail="Problem Not Found")
-
+    
+    if data.status:
+        problem.status = data.status.value
+    if data.date_solved:
+        problem.date_solved = data.date_solved
+    db.commit()
+    db.refresh(problem)
+    return problem
 
 @router.delete("/problems/{id}")
 def delete_problem(id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     problem = db.query(Problem).filter(Problem.id == id, Problem.user_id == current_user.id).first()
-    if problem:
-        id_val = problem.id
-        db.delete(problem)
-        db.commit()
-        return f"The Record of id:{id_val} has been deleted"
-    else:
+    if not problem:
         raise HTTPException(status_code=404, detail="Problem Not Found")
+    
+    id_val = problem.id
+    db.delete(problem)
+    db.commit()
+    return {"message": f"The Record of id:{id_val} has been deleted"}
