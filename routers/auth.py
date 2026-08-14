@@ -4,26 +4,27 @@ from sqlalchemy.exc import IntegrityError
 
 from database import get_db
 from models import User
-from security import UserCredentials, hash_password, verify_password, create_access_token
+from security import hash_password, verify_password, create_access_token
+from schemas import UserRegisterRequest, UserLoginRequest, TokenResponse, UserResponse
 
 router = APIRouter()
 
 
-@router.post("/auth/register", status_code=201)
-def create_user(credentials: UserCredentials, db: Session = Depends(get_db)):
+@router.post("/auth/register", status_code=201, response_model=UserResponse)
+def create_user(credentials: UserRegisterRequest, db: Session = Depends(get_db)):
     try:
         new_user = User(email=credentials.email, hashed_password=hash_password(credentials.password))
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
-        return {"id": new_user.id, "email": new_user.email}
+        return new_user
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=400, detail="This Email is already registered")
 
 
-@router.post("/auth/login")
-def login_check(credentials: UserCredentials, db: Session = Depends(get_db)):
+@router.post("/auth/login", response_model=TokenResponse)
+def login_check(credentials: UserLoginRequest, db: Session = Depends(get_db)):
     check_for_email = db.query(User).filter(User.email == credentials.email).first()
     if check_for_email is None:
         raise HTTPException(status_code=401, detail="Invalid Credentials")
