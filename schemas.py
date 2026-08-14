@@ -122,3 +122,16 @@ class CompanyResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# ===== Analytics Schemas =====
+class ProgressResponse(BaseModel):
+    week_start: Optional[date]
+    problems_solved: int
+
+
+class WeakTopicResponse(BaseModel):
+    topic: str
+    completed: int
+    total: int
+    Solve_Rate: str
+    Soved_percentage: str
