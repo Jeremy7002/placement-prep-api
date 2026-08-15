@@ -18,10 +18,7 @@ def create_problems(data: CreateProblemRequest, current_user: User = Depends(get
 
 @router.get("/problems", response_model=list[ProblemResponse])
 def get_problem(current_user: User = Depends(get_current_user), db: Session = Depends(get_db), topic: Optional[str] = None, status: Optional[str] = None):
-    try:
-        return ProblemService.get_all(db, current_user.id, topic, status)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    return ProblemService.get_all(db, current_user.id, topic, status)
 
 
 @router.put("/problems/{id}", response_model=ProblemResponse)

@@ -2,6 +2,7 @@ import logging
 from fastapi import FastAPI
 from database import Base, engine
 from middleware import RequestIDMiddleware
+from exception_handlers import setup_exception_handlers
 
 logging.basicConfig(
     level=logging.INFO,
@@ -20,6 +21,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 app.add_middleware(RequestIDMiddleware)
+setup_exception_handlers(app)
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(problems_router)
