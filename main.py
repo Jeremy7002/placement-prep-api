@@ -8,6 +8,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
+logging.getLogger("watchfiles").setLevel(logging.WARNING)
 
 from routers.auth import router as auth_router
 from routers.users import router as users_router
