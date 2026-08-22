@@ -19,7 +19,9 @@ class Problem(Base):
     title=Column(String(255))
     status = Column(Enum("Not Completed", "Pending", "Completed", name="status_enum"))
     difficulty=Column(Enum("Hard", "Medium", "Easy", name="difficulty_enum"))
+    difficulty_notes = Column(String(500), nullable=True)
     date_solved=Column(Date)
+    
 
 class Resource(Base):
     __tablename__="resources"
