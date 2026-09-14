@@ -2,8 +2,6 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
-from alembic import command
-from alembic.config import Config as AlembicConfig
 
 from main import app
 from database import Base, get_db
@@ -14,19 +12,14 @@ from settings import get_settings
 def test_db_engine():
     """Create a test database engine using TEST database URL."""
     settings = get_settings()
-    test_db_url = settings.database_url.replace(
-        "placement_api", "placement_prep_test"
-    )
-    
-    engine = create_engine(test_db_url)
-    
-    # Run Alembic migrations to create schema
-    alembic_cfg = AlembicConfig("alembic.ini")
-    alembic_cfg.set_main_option("sqlalchemy.url", test_db_url)
-    command.upgrade(alembic_cfg, "head")
-    
+
+    engine = create_engine(settings.database_url_test)
+
+    # Create the current database schema directly from SQLAlchemy models
+    Base.metadata.create_all(bind=engine)
+
     yield engine
-    
+
     # Cleanup: drop all tables after all tests finish
     Base.metadata.drop_all(bind=engine)
 

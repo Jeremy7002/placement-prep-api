@@ -63,9 +63,11 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    url = config.get_main_option("sqlalchemy.url") or settings.database_url
+
     connectable = create_engine(
-    settings.database_url,
-    poolclass=pool.NullPool,
+        url,
+        poolclass=pool.NullPool,
     )
 
     with connectable.connect() as connection:

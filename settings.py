@@ -5,7 +5,7 @@ from functools import lru_cache
 class Settings(BaseSettings):
     # Database
     database_url: str
-    
+    database_url_test:str
     # Security
     secret_key: str
     algorithm: str = "HS256"
