@@ -59,11 +59,13 @@ class CreateProblemRequest(BaseModel):
     difficulty: DifficultyEnum
     status: StatusEnum
     date_solved: date
+    difficulty_notes: Optional[str] = None
 
 
 class UpdateProblemRequest(BaseModel):
     status: Optional[StatusEnum] = None
     date_solved: Optional[date] = None
+    difficulty_notes: Optional[str] = None
 
 
 class ProblemResponse(BaseModel):
@@ -73,6 +75,7 @@ class ProblemResponse(BaseModel):
     status: str
     difficulty: str
     date_solved: date
+    difficulty_notes: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

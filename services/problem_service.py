@@ -15,7 +15,8 @@ class ProblemService:
             title=data.title,
             difficulty=data.difficulty,
             status=data.status,
-            date_solved=data.date_solved
+            date_solved=data.date_solved,
+            difficulty_notes=data.difficulty_notes
         )
         db.add(new_problem)
         db.commit()
@@ -45,6 +46,8 @@ class ProblemService:
             problem.status = data.status.value
         if data.date_solved:
             problem.date_solved = data.date_solved
+        if data.difficulty_notes:
+            problem.difficulty_notes = data.difficulty_notes
         db.commit()
         db.refresh(problem)
         return problem
