@@ -17,7 +17,7 @@ def create_problem(data: CreateProblemRequest, current_user: User = Depends(get_
 
 
 @router.get("/problems", response_model=list[ProblemResponse])
-def list_problem(current_user: User = Depends(get_current_user), db: Session = Depends(get_db), topic: Optional[str] = None, status: Optional[str] = None):
+def list_problems(current_user: User = Depends(get_current_user), db: Session = Depends(get_db), topic: Optional[str] = None, status: Optional[str] = None):
     return ProblemService.get_all(db, current_user.id, topic, status)
 
 
