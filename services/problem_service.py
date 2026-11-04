@@ -1,8 +1,8 @@
-from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 from models import Problem
-from schemas import CreateProblemRequest, UpdateProblemRequest, StatusEnum
+from schemas import CreateProblemRequest, StatusEnum, UpdateProblemRequest
 
 
 class ProblemService:
@@ -16,7 +16,7 @@ class ProblemService:
             difficulty=data.difficulty,
             status=data.status,
             date_solved=data.date_solved,
-            difficulty_notes=data.difficulty_notes
+            difficulty_notes=data.difficulty_notes,
         )
         db.add(new_problem)
         db.commit()
@@ -24,7 +24,9 @@ class ProblemService:
         return new_problem
 
     @staticmethod
-    def get_all(db: Session, user_id: int, topic: str = None, status: str = None) -> list[Problem]:
+    def get_all(
+        db: Session, user_id: int, topic: str = None, status: str = None
+    ) -> list[Problem]:
         query = db.query(Problem).filter(Problem.user_id == user_id)
         if topic:
             query = query.filter(func.lower(Problem.topic) == topic.strip().lower())
@@ -33,12 +35,18 @@ class ProblemService:
                 status_enum = StatusEnum(status)
                 query = query.filter(Problem.status == status_enum.value)
             except ValueError:
-                raise ValueError(f"Invalid status. Valid choices are: {[s.value for s in StatusEnum]}")
+                raise ValueError(
+                    f"Invalid status. Valid choices are: {[s.value for s in StatusEnum]}"
+                )
         return query.all()
 
     @staticmethod
     def get_by_id(db: Session, id: int, user_id: int) -> Problem | None:
-        return db.query(Problem).filter(Problem.id == id, Problem.user_id == user_id).first()
+        return (
+            db.query(Problem)
+            .filter(Problem.id == id, Problem.user_id == user_id)
+            .first()
+        )
 
     @staticmethod
     def update(db: Session, problem: Problem, data: UpdateProblemRequest) -> Problem:

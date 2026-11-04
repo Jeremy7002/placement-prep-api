@@ -1,11 +1,11 @@
-from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 from database import get_db
 from models import User
-from security import hash_password, verify_password, create_access_token
-from schemas import UserRegisterRequest, UserLoginRequest, TokenResponse, UserResponse
+from schemas import TokenResponse, UserLoginRequest, UserRegisterRequest, UserResponse
+from security import create_access_token, hash_password, verify_password
 
 router = APIRouter()
 
@@ -13,7 +13,9 @@ router = APIRouter()
 @router.post("/auth/register", status_code=201, response_model=UserResponse)
 def create_user(credentials: UserRegisterRequest, db: Session = Depends(get_db)):
     try:
-        new_user = User(email=credentials.email, hashed_password=hash_password(credentials.password))
+        new_user = User(
+            email=credentials.email, hashed_password=hash_password(credentials.password)
+        )
         db.add(new_user)
         db.commit()
         db.refresh(new_user)

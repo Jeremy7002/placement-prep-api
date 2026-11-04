@@ -1,7 +1,8 @@
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
-from datetime import datetime, date
-from typing import Optional
+from datetime import date, datetime
 from enum import Enum
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 # ===== Enums =====
@@ -29,10 +30,13 @@ class ApplicationStatusEnum(str, Enum):
 class DeleteResponse(BaseModel):
     message: str
 
+
 # ===== Auth Schemas =====
 class UserRegisterRequest(BaseModel):
     email: EmailStr
-    password: str = Field(..., min_length=6, description="Password must be at least 6 characters")
+    password: str = Field(
+        ..., min_length=6, description="Password must be at least 6 characters"
+    )
 
 
 class UserLoginRequest(BaseModel):
@@ -51,6 +55,7 @@ class UserResponse(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
 
 # ===== Problem Schemas =====
 class CreateProblemRequest(BaseModel):
@@ -79,6 +84,7 @@ class ProblemResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 # ===== Resource Schemas =====
 class CreateResourceRequest(BaseModel):
     topic: str = Field(..., min_length=1, description="Topic cannot be empty")
@@ -97,11 +103,14 @@ class ResourceResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 # ===== Company Schemas =====
 class CreateCompanyRequest(BaseModel):
     name: str = Field(..., min_length=2, description="Company name cannot be empty")
     role: str = Field(..., min_length=2, description="Role cannot be empty")
-    interview_format: str = Field(..., min_length=2, description="Interview format cannot be empty")
+    interview_format: str = Field(
+        ..., min_length=2, description="Interview format cannot be empty"
+    )
     application_status: ApplicationStatusEnum
 
 
@@ -121,6 +130,7 @@ class CompanyResponse(BaseModel):
     status_updated_at: Optional[datetime]
 
     model_config = ConfigDict(from_attributes=True)
+
 
 # ===== Analytics Schemas =====
 class ProgressResponse(BaseModel):

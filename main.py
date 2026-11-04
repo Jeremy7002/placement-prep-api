@@ -1,21 +1,22 @@
 import logging
+
 from fastapi import FastAPI
+
 from database import Base, engine
-from middleware import RequestIDMiddleware
 from exception_handlers import setup_exception_handlers
+from middleware import RequestIDMiddleware
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logging.getLogger("watchfiles").setLevel(logging.WARNING)
 
+from routers.analytics import router as analytics_router
 from routers.auth import router as auth_router
-from routers.users import router as users_router
+from routers.companies import router as companies_router
 from routers.problems import router as problems_router
 from routers.resources import router as resources_router
-from routers.companies import router as companies_router
-from routers.analytics import router as analytics_router
+from routers.users import router as users_router
 
 Base.metadata.create_all(bind=engine)
 

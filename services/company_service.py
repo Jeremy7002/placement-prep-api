@@ -1,5 +1,6 @@
-from sqlalchemy.orm import Session
 from datetime import datetime
+
+from sqlalchemy.orm import Session
 
 from models import Company
 from schemas import CreateCompanyRequest, UpdateCompanyRequest
@@ -14,7 +15,7 @@ class CompanyService:
             name=data.name,
             role=data.role,
             interview_format=data.interview_format,
-            application_status=data.application_status
+            application_status=data.application_status,
         )
         db.add(new_company)
         db.commit()
@@ -27,7 +28,11 @@ class CompanyService:
 
     @staticmethod
     def get_by_id(db: Session, id: int, user_id: int) -> Company | None:
-        return db.query(Company).filter(Company.id == id, Company.user_id == user_id).first()
+        return (
+            db.query(Company)
+            .filter(Company.id == id, Company.user_id == user_id)
+            .first()
+        )
 
     @staticmethod
     def update(db: Session, company: Company, data: UpdateCompanyRequest) -> Company:

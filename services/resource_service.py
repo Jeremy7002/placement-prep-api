@@ -13,7 +13,7 @@ class ResourceService:
             topic=data.topic.strip().title(),
             title=data.title,
             url=data.url,
-            notes=data.notes
+            notes=data.notes,
         )
         db.add(new_resource)
         db.commit()
@@ -26,7 +26,11 @@ class ResourceService:
 
     @staticmethod
     def get_by_id(db: Session, id: int, user_id: int) -> Resource | None:
-        return db.query(Resource).filter(Resource.id == id, Resource.user_id == user_id).first()
+        return (
+            db.query(Resource)
+            .filter(Resource.id == id, Resource.user_id == user_id)
+            .first()
+        )
 
     @staticmethod
     def delete(db: Session, resource: Resource) -> None:
