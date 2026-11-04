@@ -27,15 +27,22 @@ def get_weak_topics(current_user: User = Depends(get_current_user), db: Session 
                .filter(Problem.user_id == current_user.id)
                .group_by(Problem.topic)
                .all())
-    res = []
+
+    scored = []
     for rec in records:
-        ans = {}
-        ans["topic"] = rec[0]
-        ans["completed"] = rec[1]
-        ans["total"] = rec[2]
-        ans["Solve_Rate"] = str(rec[1]) + '/' + str(rec[2])
-        sp = (rec[1] / rec[2]) * 100
-        ans["Soved_percentage"] = f"{sp:.2f}%"
-        res.append(ans)
-    res = sorted(res, key=lambda x: (x["Solve_Rate"], x["topic"]))
+        topic, completed, total = rec[0], rec[1], rec[2]
+        percentage = (completed / total) * 100 if total else 0.0
+        scored.append((percentage, topic, completed, total))
+
+    scored.sort(key=lambda row: (row[0], row[1]))
+
+    res = []
+    for percentage, topic, completed, total in scored:
+        res.append({
+            "topic": topic,
+            "completed": completed,
+            "total": total,
+            "Solve_Rate": f"{completed}/{total}",
+            "Soved_percentage": f"{percentage:.2f}%",
+        })
     return res
