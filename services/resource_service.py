@@ -10,7 +10,7 @@ class ResourceService:
     def create(db: Session, user_id: int, data: CreateResourceRequest) -> Resource:
         new_resource = Resource(
             user_id=user_id,
-            topic=data.topic,
+            topic=data.topic.strip().title(),
             title=data.title,
             url=data.url,
             notes=data.notes
