@@ -12,12 +12,12 @@ router = APIRouter()
 
 
 @router.post("/problems", status_code=201, response_model=ProblemResponse)
-def create_problems(data: CreateProblemRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def create_problem(data: CreateProblemRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return ProblemService.create(db, current_user.id, data)
 
 
 @router.get("/problems", response_model=list[ProblemResponse])
-def get_problem(current_user: User = Depends(get_current_user), db: Session = Depends(get_db), topic: Optional[str] = None, status: Optional[str] = None):
+def list_problem(current_user: User = Depends(get_current_user), db: Session = Depends(get_db), topic: Optional[str] = None, status: Optional[str] = None):
     return ProblemService.get_all(db, current_user.id, topic, status)
 
 

@@ -11,12 +11,12 @@ router = APIRouter()
 
 
 @router.post("/companies", status_code=201, response_model=CompanyResponse)
-def create_companies(data: CreateCompanyRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def create_company(data: CreateCompanyRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return CompanyService.create(db, current_user.id, data)
 
 
 @router.get("/companies", response_model=list[CompanyResponse])
-def get_company(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def list_companies(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return CompanyService.get_all(db, current_user.id)
 
 

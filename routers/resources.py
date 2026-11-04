@@ -11,12 +11,12 @@ router = APIRouter()
 
 
 @router.post("/resources", status_code=201, response_model=ResourceResponse)
-def create_resources(data: CreateResourceRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def create_resource(data: CreateResourceRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return ResourceService.create(db, current_user.id, data)
 
 
 @router.get("/resources", response_model=list[ResourceResponse])
-def get_resource(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def list_resources(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return ResourceService.get_all(db, current_user.id)
 
 
