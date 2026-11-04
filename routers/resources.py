@@ -25,6 +25,5 @@ def delete_resource(id: int, current_user: User = Depends(get_current_user), db:
     resource = ResourceService.get_by_id(db, id, current_user.id)
     if not resource:
         raise HTTPException(status_code=404, detail="Resource Not Found")
-    title_val = resource.title
     ResourceService.delete(db, resource)
-    return {"message": f"The Resource {title_val} has been deleted"}
+    return {"message": f"Resource {id} deleted"}

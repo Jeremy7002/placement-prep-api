@@ -34,6 +34,5 @@ def delete_problem(id: int, current_user: User = Depends(get_current_user), db: 
     problem = ProblemService.get_by_id(db, id, current_user.id)
     if not problem:
         raise HTTPException(status_code=404, detail="Problem Not Found")
-    id_val = problem.id
     ProblemService.delete(db, problem)
-    return {"message": f"The Record of id:{id_val} has been deleted"}
+    return {"message": f"Problem {id} deleted"}

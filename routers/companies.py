@@ -33,6 +33,5 @@ def delete_company(id: int, current_user: User = Depends(get_current_user), db: 
     company = CompanyService.get_by_id(db, id, current_user.id)
     if not company:
         raise HTTPException(status_code=404, detail="Company Not Found")
-    company_name = company.name
     CompanyService.delete(db, company)
-    return {"message": f"The Company {company_name} has been deleted"}
+    return {"message": f"Company {id} deleted"}
