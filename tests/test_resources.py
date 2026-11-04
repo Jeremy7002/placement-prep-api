@@ -24,7 +24,7 @@ def test_create_resource_success(client):
     
     assert response.status_code == 201
     data = response.json()
-    assert data["topic"] == "arrays"
+    assert data["topic"] == "Arrays"      # the service title-cases the topic
     assert data["title"] == "LeetCode Arrays Guide"
     assert data["url"] == "https://leetcode.com/explore/arrays"
     assert "id" in data
