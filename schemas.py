@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from datetime import datetime, date
 from typing import Optional
 from enum import Enum
@@ -25,7 +25,7 @@ class ApplicationStatusEnum(str, Enum):
     REJECTED = "Rejected"
 
 
-#======Delete Response Schema =====
+# ===== Delete Response Schema =====
 class DeleteResponse(BaseModel):
     message: str
 
@@ -50,8 +50,7 @@ class UserResponse(BaseModel):
     email: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # ===== Problem Schemas =====
 class CreateProblemRequest(BaseModel):
@@ -75,8 +74,7 @@ class ProblemResponse(BaseModel):
     difficulty: str
     date_solved: date
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # ===== Resource Schemas =====
 class CreateResourceRequest(BaseModel):
@@ -94,8 +92,7 @@ class ResourceResponse(BaseModel):
     notes: Optional[str]
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # ===== Company Schemas =====
 class CreateCompanyRequest(BaseModel):
@@ -120,8 +117,7 @@ class CompanyResponse(BaseModel):
     applied_on: datetime
     status_updated_at: Optional[datetime]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # ===== Analytics Schemas =====
 class ProgressResponse(BaseModel):
