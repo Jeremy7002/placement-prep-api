@@ -1,11 +1,9 @@
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, EmailStr, Field
 from pwdlib import PasswordHash
 import jwt
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 
 from database import get_db
 from models import User
@@ -14,14 +12,7 @@ from settings import get_settings
 security = HTTPBearer()
 password_hash = PasswordHash.recommended()
 
-
-class UserCredentials(BaseModel):
-    email: EmailStr
-    password: str = Field(..., min_length=6, description="Password must be at least 6 characters")
-
-
 def hash_password(password: str) -> str:
-    settings = get_settings()
     return password_hash.hash(password)
 
 
