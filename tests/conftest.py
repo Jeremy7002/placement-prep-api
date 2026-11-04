@@ -29,13 +29,19 @@ def test_db_session(test_db_engine):
     """Create a fresh database session for each test."""
     connection = test_db_engine.connect()
     transaction = connection.begin()
-    session = sessionmaker(autocommit=False, autoflush=False, bind=connection)()
+    session = sessionmaker(
+        autocommit=False,
+        autoflush=False,
+        bind=connection,
+        join_transaction_mode="create_savepoint",
+    )()
 
     yield session
 
     session.close()
     transaction.rollback()
     connection.close()
+
 
 
 @pytest.fixture
