@@ -159,8 +159,9 @@ def test_get_weak_topics_with_problems(client):
         assert "topic" in topic
         assert "completed" in topic
         assert "total" in topic
-        assert "Solve_Rate" in topic
-        assert "Soved_percentage" in topic
+        assert "solve_rate" in topic
+        assert "solved_percentage" in topic
+
 
 
 def test_user_isolation_analytics_only_own_data(client):

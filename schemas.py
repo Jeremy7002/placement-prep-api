@@ -129,5 +129,5 @@ class WeakTopicResponse(BaseModel):
     topic: str
     completed: int
     total: int
-    Solve_Rate: str
-    Soved_percentage: str
+    solve_rate: str
+    solved_percentage: str

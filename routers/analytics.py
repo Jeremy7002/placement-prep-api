@@ -42,7 +42,7 @@ def get_weak_topics(current_user: User = Depends(get_current_user), db: Session 
             "topic": topic,
             "completed": completed,
             "total": total,
-            "Solve_Rate": f"{completed}/{total}",
-            "Soved_percentage": f"{percentage:.2f}%",
+            "solve_rate": f"{completed}/{total}",
+            "solved_percentage": f"{percentage:.2f}%",
         })
     return res
