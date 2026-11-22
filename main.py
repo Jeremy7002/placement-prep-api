@@ -1,6 +1,5 @@
 import logging
 from fastapi import FastAPI
-from database import Base, engine
 from middleware import RequestIDMiddleware
 from exception_handlers import setup_exception_handlers
 
@@ -17,7 +16,6 @@ from routers.resources import router as resources_router
 from routers.companies import router as companies_router
 from routers.analytics import router as analytics_router
 
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 

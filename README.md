@@ -172,7 +172,7 @@ This project was built and deployed under a defined timeline, with priority give
 
 - **Inconsistent request format across endpoints.** `POST /auth/login` and `POST /auth/register` accept a JSON request body (fixed, since these carry credentials). Other create/update endpoints (`/problems`, `/resources`, `/companies`) currently accept query parameters instead of a JSON body. Migrating all endpoints to JSON bodies is a planned improvement, deferred to avoid retesting the entire API surface this close to deployment.
 
-- **No database migration tooling.** Schema is currently created via SQLAlchemy's `Base.metadata.create_all()` at startup. Adopting Alembic for versioned migrations is planned for any future schema changes.
+- **Schema managed by Alembic.** All schema changes go through versioned migrations in `alembic/versions/`. Apply them with `alembic upgrade head`. Tests build their own disposable schema from the models via `create_all` on a separate test database.
 
 - **Single-file application structure.** Models, authentication logic, and route handlers currently live in `main.py`. Splitting into separate modules (`models.py`, `auth.py`, route-specific files) is a planned refactor for maintainability.
 
