@@ -1,10 +1,10 @@
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from fastapi.testclient import TestClient
 
-from main import app
 from database import Base, get_db
+from main import app
 from settings import get_settings
 
 
@@ -29,23 +29,30 @@ def test_db_session(test_db_engine):
     """Create a fresh database session for each test."""
     connection = test_db_engine.connect()
     transaction = connection.begin()
-    session = sessionmaker(autocommit=False, autoflush=False, bind=connection)()
-    
+    session = sessionmaker(
+        autocommit=False,
+        autoflush=False,
+        bind=connection,
+        join_transaction_mode="create_savepoint",
+    )()
+
     yield session
-    
+
     session.close()
     transaction.rollback()
     connection.close()
 
 
+
 @pytest.fixture
 def client(test_db_session):
     """Create a TestClient that uses the test database."""
+
     def override_get_db():
         yield test_db_session
-    
+
     app.dependency_overrides[get_db] = override_get_db
-    
+
     yield TestClient(app)
-    
+
     app.dependency_overrides.clear()

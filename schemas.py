@@ -1,7 +1,8 @@
-from pydantic import BaseModel, EmailStr, Field
-from datetime import datetime, date
-from typing import Optional
+from datetime import date, datetime
 from enum import Enum
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 # ===== Enums =====
@@ -25,14 +26,17 @@ class ApplicationStatusEnum(str, Enum):
     REJECTED = "Rejected"
 
 
-#======Delete Response Schema =====
+# ===== Delete Response Schema =====
 class DeleteResponse(BaseModel):
     message: str
+
 
 # ===== Auth Schemas =====
 class UserRegisterRequest(BaseModel):
     email: EmailStr
-    password: str = Field(..., min_length=6, description="Password must be at least 6 characters")
+    password: str = Field(
+        ..., min_length=6, description="Password must be at least 6 characters"
+    )
 
 
 class UserLoginRequest(BaseModel):
@@ -50,8 +54,8 @@ class UserResponse(BaseModel):
     email: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
 
 # ===== Problem Schemas =====
 class CreateProblemRequest(BaseModel):
@@ -60,11 +64,13 @@ class CreateProblemRequest(BaseModel):
     difficulty: DifficultyEnum
     status: StatusEnum
     date_solved: date
+    difficulty_notes: Optional[str] = None
 
 
 class UpdateProblemRequest(BaseModel):
     status: Optional[StatusEnum] = None
     date_solved: Optional[date] = None
+    difficulty_notes: Optional[str] = None
 
 
 class ProblemResponse(BaseModel):
@@ -74,9 +80,10 @@ class ProblemResponse(BaseModel):
     status: str
     difficulty: str
     date_solved: date
+    difficulty_notes: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
 
 # ===== Resource Schemas =====
 class CreateResourceRequest(BaseModel):
@@ -94,14 +101,16 @@ class ResourceResponse(BaseModel):
     notes: Optional[str]
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
 
 # ===== Company Schemas =====
 class CreateCompanyRequest(BaseModel):
     name: str = Field(..., min_length=2, description="Company name cannot be empty")
     role: str = Field(..., min_length=2, description="Role cannot be empty")
-    interview_format: str = Field(..., min_length=2, description="Interview format cannot be empty")
+    interview_format: str = Field(
+        ..., min_length=2, description="Interview format cannot be empty"
+    )
     application_status: ApplicationStatusEnum
 
 
@@ -120,8 +129,8 @@ class CompanyResponse(BaseModel):
     applied_on: datetime
     status_updated_at: Optional[datetime]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
 
 # ===== Analytics Schemas =====
 class ProgressResponse(BaseModel):
@@ -133,5 +142,5 @@ class WeakTopicResponse(BaseModel):
     topic: str
     completed: int
     total: int
-    Solve_Rate: str
-    Soved_percentage: str
+    solve_rate: str
+    solved_percentage: str
